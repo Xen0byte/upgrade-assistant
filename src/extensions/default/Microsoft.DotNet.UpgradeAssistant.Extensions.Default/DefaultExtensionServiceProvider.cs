@@ -1,6 +1,8 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.DotNet.UpgradeAssistant.Extensions.Default.ConfigUpdaters;
@@ -10,6 +12,7 @@ using Microsoft.DotNet.UpgradeAssistant.Steps.Packages;
 using Microsoft.DotNet.UpgradeAssistant.Steps.Packages.Analyzers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.DotNet.UpgradeAssistant;
 
 namespace Microsoft.DotNet.UpgradeAssistant.Extensions.Default
 {
@@ -91,6 +94,13 @@ namespace Microsoft.DotNet.UpgradeAssistant.Extensions.Default
         // can register additional package reference analyzers, as needed.
         private static void AddPackageReferenceAnalyzers(IServiceCollection services)
         {
+            services.AddTransient<NetFrameworkProjectFilter<IPackageReferencesAnalyzer>>(sp => netFrameworkProject =>
+            {
+                var allAnalyzers = sp.GetRequiredService<IEnumerable<IPackageReferencesAnalyzer>>();
+                var filteredAnalyzers = allAnalyzers.Where(feature => feature.GetType().IsApplicableToFramework(netFrameworkProject));
+                return filteredAnalyzers;
+            });
+
             // Add package analyzers (note that the order matters as the analyzers are run in the order registered)
             services.AddTransient<IPackageReferencesAnalyzer, DuplicateReferenceAnalyzer>();
             services.AddTransient<IPackageReferencesAnalyzer, TransitiveReferenceAnalyzer>();

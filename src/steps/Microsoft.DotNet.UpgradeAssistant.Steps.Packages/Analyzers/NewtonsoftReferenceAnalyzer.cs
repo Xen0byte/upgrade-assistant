@@ -9,6 +9,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.UpgradeAssistant.Steps.Packages.Analyzers
 {
+    // Upgrade Step 2 will only apply PackageReferencesAnalyzers that apply to NetFramework
+    // other steps will not filter so we're only opting into NetFramework
+    [ApplicableNetFramework(NetFrameworkProject.None)]
     public class NewtonsoftReferenceAnalyzer : IPackageReferencesAnalyzer
     {
         private const string NewtonsoftPackageName = "Microsoft.AspNetCore.Mvc.NewtonsoftJson";

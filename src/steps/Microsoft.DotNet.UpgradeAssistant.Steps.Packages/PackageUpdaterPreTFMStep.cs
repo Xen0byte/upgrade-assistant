@@ -32,9 +32,9 @@ namespace Microsoft.DotNet.UpgradeAssistant.Steps.Packages
         public PackageUpdaterPreTFMStep(
             IOptions<PackageUpdaterOptions> updaterOptions,
             IPackageRestorer packageRestorer,
-            IEnumerable<IPackageReferencesAnalyzer> packageAnalyzers,
+            NetFrameworkProjectFilter<IPackageReferencesAnalyzer> packageAnalyzersFilter,
             ILogger<PackageUpdaterPreTFMStep> logger)
-            : base(updaterOptions, packageRestorer, packageAnalyzers, logger)
+            : base(updaterOptions, packageRestorer, packageAnalyzersFilter == null ? new List<IPackageReferencesAnalyzer>() : packageAnalyzersFilter(NetFrameworkProject.All), logger)
         {
         }
     }
