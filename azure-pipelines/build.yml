@@ -40,18 +40,12 @@ extends:
         templateContext:
           outputs:
           - output: nuget
-            displayName: 'NuGet push to VS feed'
-            condition: and(succeeded(), eq(variables['Build.OfficialRelease'], 'true'))
-            packageParentPath: '$(Build.ArtifactStagingDirectory)\Packages'
-            packagesToPush: $(Build.ArtifactStagingDirectory)\Packages\*.nupkg;!$(Build.ArtifactStagingDirectory)\Packages\*.symbols.nupkg
-            publishVstsFeed: 97a41293-2972-4f48-8c0e-05493ae82010
-          - output: nuget
             displayName: 'NuGet push to NuGet.org'
             condition: and(succeeded(), eq(variables['Build.OfficialRelease'], 'true'))
             packageParentPath: '$(Build.ArtifactStagingDirectory)\Packages'
             packagesToPush: $(Build.ArtifactStagingDirectory)\Packages\*.nupkg;!$(Build.ArtifactStagingDirectory)\Packages\*.symbols.nupkg
             nuGetFeedType: external
-            externalEndpoint: XamlBehaviors-NuGet.org
+            publishFeedCredentials: XamlBehaviors-NuGet.org
         steps:
         - checkout: self
           clean: true
@@ -64,14 +58,14 @@ extends:
               **\bin\**\*
               **\obj\**\*
         - task: UseDotNet@2
-          displayName: Use .NET Core SDK 6.x
+          displayName: Use .NET Core SDK 8.x
           inputs:
-            version: 6.x
+            version: 8.x
             performMultiLevelLookup: true
         - task: NuGetToolInstaller@1
-          displayName: Use NuGet 6.9.1
+          displayName: Use NuGet 6.x
           inputs:
-            versionSpec: 6.9.1
+            versionSpec: 6.x
         - task: NuGetAuthenticate@1
           displayName: NuGet Authenticate
         - task: NuGetCommand@2
@@ -85,16 +79,15 @@ extends:
             platform: Any CPU
             configuration: Release
             clean: true
+            msbuildArgs: /p:PublicRelease=$(Build.OfficialRelease)
         - task: VSTest@2
           displayName: Run Unit Tests
           inputs:
             testAssemblyVer2: |-
-              **\*UnitTests.dll
-              !**\*TestAdapter.dll
-              !**\obj\**
+              **\UpgradeAssistant.*.Tests.dll
         - task: VSBuild@1
           displayName: Build Mappings NuGet package
           inputs:
             solution: src\UpgradeAssistant.Mappings\UpgradeAssistant.Mappings.csproj
-            msbuildArgs: /t:Pack /p:TimestampPackage=$(TimestampPackage) /p:PackageOutputPath="$(Build.ArtifactStagingDirectory)\Packages"
-            configuration: Release
+            msbuildArgs: /t:Pack /p:PublicRelease=$(Build.OfficialRelease) /p:TimestampPackage=$(TimestampPackage) /p:PackageOutputPath="$(Build.ArtifactStagingDirectory)\Packages"
+            configuration: release
